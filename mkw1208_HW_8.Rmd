@@ -1,0 +1,123 @@
+---
+title: 'CSDE 502: Assigment #8'
+author: "Maxine Wright"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Clear workspace
+rm(list = ls())
+
+#Load libraries
+library(tidyverse)
+library(ggplot2)
+library(pander)
+library(kableExtra)
+library(forcats)
+
+x <- read.table("~/Desktop/r/CSDE_502WI/Deaths_1x1.txt", skip = 2, header = TRUE)
+
+```
+
+# Instructions:
+*Using R Markdown, write a brief paper (about two pages) about the country that you've chosen, or make a comparison of two or more countries. Include in this paper:*
+
+1. A brief introductory paragraph describing the country (feel free to steal something from the web).
+2. Verbiage that describes the data and references the HMD data source.
+3. An analysis of the data to describe something interesting about the country.
+4. Include at least one of each of the following text with imbedded R:
+    + hyperlink
+    + table
+    + plot
+    + some R Markdown thing you've never used before
+  
+## Introduction: 
+Chile is a country in South America bordered by Bolivia, Argentina, and Peru. It is a long, narrow country situated next to the Pacific Ocean, with over 6,000km of coastline. The capital of Chile is Santiago, a city in the southern part of the country. One of the main features of the country is the Atacama Desert in the north, which borders the national park and flamingo reserve on the Bolivian border. 
+
+![A Flamingo at The Flamingo National Reserve (taken by me!)](IMG_5752.jpeg)
+
+The death data included in the Human Mortality Database for Chile cover the *de facto* population and are organized in a 1x1 format. This means that deaths are categorized by one-year age groups (0 to 110+) and year (1992 to 2008). The death total is further broken down by Male and Female. For example, the highest total number of deaths was in 1992 in the age 0 group, at `r max(x$Total)`; within that, `r max(x$Female)` of the `r max(x$Total)` deaths were female, while `r max(x$Male)` were male. 
+
+Canudas-Romo and Castro (2017) provide information about what is included in the historical mortality series about Chile from the Human Mortality Database [here](https://www.mortality.org/hmd/CHL/InputDB/CHLcom.pdf). Most notably, they provide a rationale for the restriction of the mortality data range to the years between 1992 and 2008, saying: 
+
+> "The historical mortality series for Chile included in the Human Mortality Database (HMD) covers the period from 1992 to 2007. This initial series was selected after assessment of the developments in birth, death and population counts during the second half of the twentieth century. Parts of this evaluation are included in the present document. The main reasons for restricting the HMD series to the period since 1992 are: 1) only the two most recent censuses of 1992 and 2002 show below 3% of incorrect reporting of age; 2) it is only in the last decade of the twentieth century that the percentage of delayed birth registration is 5.4% or lower; and 3) finally, during this period, at least 90% of deaths were certified by a physician." - Canudas-Romo and Castro (2017), "ABOUT MORTALITY DATA FOR CHILE", page 2. 
+
+Information about data sources used by the Human Mortality Database to compile these demographic statistics is available [here](https://www.mortality.org/hmd/CHL/DOCS/ref.pdf).
+
+# Plots and Tables
+
+The three plots below show the total deaths by year, followed by female deaths and male deaths. 
+
+```{r}
+ggplot(data=x, aes(x=Total, y=Year, group=1))+
+  geom_point()
+```
+
+```{r}
+ggplot(data=x, aes(x=Female, y=Year, group=1))+
+  geom_point()
+```
+
+```{r}
+ggplot(data=x, aes(x=Male, y=Year, group=1))+
+  geom_point()
+```
+
+As you can see, the number of deaths per year are roughly consistent, with a few outliers. Next, we have theinformation in grouped table form for male and female deaths: 
+
+
+```{r, include=FALSE}
+
+x <- x %>%
+  mutate(Female_group = case_when(
+    Female <= 100 ~ 1,
+    Female > 100 & Female <= 500 ~ 2,
+    Female > 500 & Female <= 1000 ~ 3,
+    Female > 1000 & Female <= 1500 ~  4,
+    Female > 1500 ~5,
+    TRUE ~ 9))
+
+library(labelled)
+
+x$Female_group <- labelled(x = x$Female_group, 
+                                labels = c("(1) 100 Deaths or Fewer" = 1, 
+                                           "(2) 101-500 Deaths" = 2, 
+                                           "(3) 501-1000 Deaths" = 3,
+                                           "(4) 1001-1500 Deaths" = 4,
+                                           "(5) Greater than 1500 Deaths" = 5))
+```
+
+```{r}
+pander(table(x$Female_group))
+```
+
+```{r, include=FALSE}
+
+x <- x %>%
+  mutate(Male_group = case_when(
+    Male <= 100 ~ 1,
+    Male > 100 & Male <= 500 ~ 2,
+    Male > 500 & Male <= 1000 ~ 3,
+    Male > 1000 & Male <= 1500 ~  4,
+    Male > 1500 ~5,
+    TRUE ~ 9))
+
+x$Male_group <- labelled(x = x$Male_group, 
+                                labels = c("(1) 100 Deaths or Fewer" = 1, 
+                                           "(2) 101-500 Deaths" = 2, 
+                                           "(3) 501-1000 Deaths" = 3,
+                                           "(4) 1001-1500 Deaths" = 4,
+                                           "(5) Greater than 1500 Deaths" = 5))
+
+
+```
+
+```{r}
+pander(table(x$Male_group))
+```
+
